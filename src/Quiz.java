@@ -18,6 +18,8 @@ public class Quiz extends Observable implements Serializable
 	public void addQuestion(String question, String answer)
 	{
 		questions.add(new Question(question, answer));
+		setChanged();
+		notifyObservers();
 	}
 
 	public void removeQuestion(Question copyOfQuestion)
@@ -29,6 +31,8 @@ public class Quiz extends Observable implements Serializable
 				questions.remove(question);
 			}
 		}
+		setChanged();
+		notifyObservers();
 	}
 
 	public void changeQuestion(Question copyOfQuestion)
@@ -40,6 +44,8 @@ public class Quiz extends Observable implements Serializable
 				question.setAnswer(copyOfQuestion.getAnswer());
 			}
 		}
+		setChanged();
+		notifyObservers();
 	}
 
 	public List<Question> getQuestions()
