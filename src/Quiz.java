@@ -2,6 +2,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
+import java.util.Random;
 
 /**
  * @author Joachim Pihlgren, joapih-6
@@ -9,10 +10,12 @@ import java.util.Observable;
 public class Quiz extends Observable implements Serializable
 {
 	private List<Question> questions;
+	private Random random;
 
 	public Quiz()
 	{
 		questions = new ArrayList<>();
+		random = new Random();
 	}
 
 	public void addQuestion(String question, String answer)
@@ -58,5 +61,11 @@ public class Quiz extends Observable implements Serializable
 			copyOfQuestions.add(copy);
 		}
 		return copyOfQuestions;
+	}
+
+	public Question getRandomQuestion()
+	{
+		Question question = questions.get(random.nextInt(questions.size()) + 1);
+		return new Question(question.getQuestion(), question.getAnswer());
 	}
 }

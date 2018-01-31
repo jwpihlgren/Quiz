@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -17,11 +19,17 @@ public class View extends JFrame implements Observer
 
 	private JPanel mainPanel;
 
-	private DefaultListModel<String> playerListModel;
-	private JList<String> players;
+	private final int LINE_SIZE = 20;
+	private DefaultListModel<Player> playerListModel;
 
 	private JButton addPlayer;
 	private JButton removePlayer;
+	private JList<Player> players;
+	private JTextArea questionTextArea;
+	private JTextField answerTextField;
+	private JButton done;
+	private JButton start;
+	private JButton abort;
 
 	public View()
 	{
@@ -68,6 +76,18 @@ public class View extends JFrame implements Observer
 
 	private void createMainPanel()
 	{
+
+		mainPanel = new JPanel();
+		mainPanel.setLayout(new BorderLayout());
+
+		createPlayerPanel();
+		createQuestionAnswerPanel();
+
+		this.add(mainPanel);
+	}
+
+	private void createPlayerPanel()
+	{
 		playerListModel = new DefaultListModel<>();
 
 		players = new JList<>(playerListModel);
@@ -85,22 +105,144 @@ public class View extends JFrame implements Observer
 		buttonPanel.add(playerScroller);
 		buttonPanel.add(addPlayer);
 		buttonPanel.add(removePlayer);
-
-		mainPanel = new JPanel();
-		mainPanel.setLayout(new BorderLayout());
 		mainPanel.add(buttonPanel, BorderLayout.WEST);
-
-		this.add(mainPanel);
 	}
 
-	public void addPlayer(String name)
+	private void createQuestionAnswerPanel()
 	{
-		playerListModel.addElement(name + " 0");
+		questionTextArea = new JTextArea("Test");
+		questionTextArea.setBorder(BorderFactory.createTitledBorder("Fråga"));
+		questionTextArea.setWrapStyleWord(true);
+		questionTextArea.setLineWrap(true);
+
+		answerTextField = new JTextField();
+		answerTextField.setBorder(BorderFactory.createTitledBorder("Ditt svar"));
+
+		done = new JButton("Klar");
+		start = new JButton("Börja");
+		abort = new JButton("Avbryt");
+
+		JPanel answerPanel = new JPanel();
+		answerPanel.setLayout(new BoxLayout(answerPanel, BoxLayout.LINE_AXIS));
+		answerPanel.add(answerTextField);
+		answerPanel.add(done);
+
+		JPanel startAbortPanel = new JPanel();
+		startAbortPanel.setLayout(new BoxLayout(startAbortPanel, BoxLayout.LINE_AXIS));
+		startAbortPanel.add(start);
+		startAbortPanel.add(abort);
+
+		JPanel questionPanel = new JPanel();
+		questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.PAGE_AXIS));
+		questionPanel.add(questionTextArea);
+		questionPanel.add(answerPanel);
+		questionPanel.add(startAbortPanel);
+
+		mainPanel.add(questionPanel, BorderLayout.CENTER);
 	}
 
-	public void removePlayer()
+	public void playersSetSelectionAllowed(boolean bool)
+	{
+		//Todo implement this.
+	}
+
+	public void addPlayerAddActionListener(ActionListener actionListener)
+	{
+		addPlayer.addActionListener(actionListener);
+	}
+
+	public void addPlayerSetEnabled(boolean bool)
+	{
+		addPlayer.setEnabled(bool);
+	}
+
+	public void increaseSelectedPlayerScoreByOne()
+	{
+		players.getSelectedValue().increaseScoreByOne();
+	}
+
+	public List<Player> getPlayers()
+	{
+		List<Player> playerList = new ArrayList<>();
+		for(int i = 0; i < playerListModel.getSize(); i++)
+		{
+			playerList.add(playerListModel.getElementAt(i));
+		}
+		return playerList;
+	}
+
+	public boolean setNextPlayerSelected()
+	{
+		if(players.getSelectedIndex() < playerListModel.getSize())
+		{
+			players.setSelectedIndex(players.getSelectedIndex() + 1);
+			return true;
+		}
+		else
+		{
+			return false;
+
+		}
+	}
+
+	public void removePlayerAddActionListener(ActionListener actionListener)
+	{
+		removePlayer.addActionListener(actionListener);
+	}
+
+	public void removePlayerSetEnabled(boolean bool)
+	{
+		removePlayer.setEnabled(bool);
+	}
+
+	public String getQuestionTextAreaText()
+	{
+		return questionTextArea.getText();
+	}
+
+	public void setQuestionTextAreaText(String text)
+	{
+		questionTextArea.setText(text);
+	}
+
+	public String getAnswerTextFieldText()
+	{
+		return answerTextField.getText();
+	}
+
+	public void clearAnswerTextField()
+	{
+		answerTextField.setText("");
+	}
+
+	public void doneAddActionListener(ActionListener actionListener)
+	{
+		done.addActionListener(actionListener);
+	}
+
+	public void startAddActionListener(ActionListener actionListener)
+	{
+		start.addActionListener(actionListener);
+	}
+
+	public void abortAddActionListener(ActionListener actionListener)
+	{
+		abort.addActionListener(actionListener);
+	}
+
+	public void addPlayer(Player player)
+	{
+		playerListModel.addElement(player);
+	}
+
+	public void removeSelectedPlayer()
 	{
 		playerListModel.remove(players.getSelectedIndex());
+	}
+
+	public void removeAllPlayers()
+	{
+		playerListModel.removeAllElements();
 	}
 
 	@Override public void update(Observable o, Object arg)
