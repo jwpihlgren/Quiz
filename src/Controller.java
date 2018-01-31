@@ -146,6 +146,7 @@ public class Controller
 
 	private void startNewGame()
 	{
+		model.createNewRandom();
 		view.playersSetSelectionAllowed(false);
 		view.removePlayerSetEnabled(false);
 		view.addPlayerSetEnabled(false);
