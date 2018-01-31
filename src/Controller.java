@@ -115,6 +115,7 @@ public class Controller
 			}
 			else
 			{
+				showConfirmMessage("Det är spelare " + view.getSelectedPlayerName() + "s tur", new Object[] { "ok" });
 				displayNextQuestion();
 			}
 
@@ -137,8 +138,9 @@ public class Controller
 			playerScores.append(player.getScore());
 			playerScores.append(" poäng\n");
 		}
-		playerScores.append("Vinnaren var ");
 		playerScores.append(winner.getName());
+		playerScores.append(" vann!");
+
 		showSuccessMessage(playerScores.toString(), "Quizet slut!");
 	}
 
@@ -151,6 +153,7 @@ public class Controller
 		view.abortSetEnabled(true);
 		view.doneSetEnabled(true);
 		view.selectPlayer(0);
+		showConfirmMessage("Det är spelare " + view.getSelectedPlayerName() + "s tur", new Object[] { "ok" });
 		displayNextQuestion();
 
 	}

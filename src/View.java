@@ -191,6 +191,11 @@ public class View extends JFrame implements Observer
 		}
 	}
 
+	public String getSelectedPlayerName()
+	{
+		return playerListModel.getElementAt(players.getSelectedIndex()).getName();
+	}
+
 	public void removePlayerAddActionListener(ActionListener actionListener)
 	{
 		removePlayer.addActionListener(actionListener);
