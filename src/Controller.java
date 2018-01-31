@@ -81,10 +81,22 @@ public class Controller
 
 	private void addPlayer()
 	{
-		view.addPlayer(new Player(getUserInput("Ange ditt namn")));
-		view.startSetEnabled(true);
-		view.removePlayerSetEnabled(true);
-		view.selectPlayer(0);
+		String playerName = getUserInput("Ange ditt namn");
+		if(playerName == null)
+		{
+			//Do nothing since action was aborted
+		}
+		else if(playerName.equals(""))
+		{
+			showErrorMessage("Spelarnamn får inte vara tomt");
+		}
+		else
+		{
+			view.addPlayer(new Player(playerName));
+			view.startSetEnabled(true);
+			view.removePlayerSetEnabled(true);
+			view.selectPlayer(0);
+		}
 	}
 
 	private void removePlayer()
@@ -116,6 +128,7 @@ public class Controller
 			else
 			{
 				showConfirmMessage("Det är spelare " + view.getSelectedPlayerName() + "s tur", new Object[] { "ok" });
+				view.clearAnswerTextField();
 				displayNextQuestion();
 			}
 
@@ -412,7 +425,7 @@ public class Controller
 		{
 			return userInput.getText();
 		}
-		return "";
+		return null;
 	}
 
 	/**

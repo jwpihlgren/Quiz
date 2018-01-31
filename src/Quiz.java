@@ -66,7 +66,6 @@ public class Quiz extends Observable implements Serializable
 	public Question getRandomQuestion()
 	{
 		Question question = questions.get(random.nextInt(questions.size() - 1) + 1);
-		System.out.println(questions.size());
 		return new Question(question.getQuestion(), question.getAnswer());
 	}
 
