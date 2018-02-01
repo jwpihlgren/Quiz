@@ -122,6 +122,8 @@ public class Controller
 				questionView.newFilter();
 			}
 		});
+		questionView.newButtonAddActionListener(e -> addQuestion());
+		questionView.saveButtonAddActionListener(e -> saveQuestion());
 	}
 
 	//QuestionView Logic
@@ -129,6 +131,42 @@ public class Controller
 	{
 		questionView.setVisible(true);
 		questionView.update(model, null);
+	}
+
+	private void addQuestion()
+	{
+		questionView.setQuestionTextFieldEditable(true);
+		questionView.setAnswerTextFieldEditable(true);
+		questionView.changeButtonSetEnabled(false);
+		questionView.deleteButtonSetEnabled(false);
+	}
+
+	private void saveQuestion()
+	{
+		boolean unique = true;
+		String newQuestion = questionView.getQuestionFieldText();
+		String newAnswer = questionView.getAswerFieldText();
+		List<Question> questions = model.getQuestions();
+		for(Question question1 : questions)
+		{
+			if(newQuestion.toLowerCase().equals(question1.getQuestion().toLowerCase()))
+			{
+				unique = false;
+			}
+		}
+		if(unique)
+		{
+			model.addQuestion(newQuestion, newAnswer);
+		}
+		else
+		{
+			showErrorMessage("Frågan finns redan");
+		}
+		questionView.setQuestionTextFieldEditable(false);
+		questionView.setAnswerTextFieldEditable(false);
+		questionView.saveButtonSetEnabled(false);
+		questionView.changeButtonSetEnabled(true);
+		questionView.deleteButtonSetEnabled(true);
 	}
 
 	private void clearSearch()
