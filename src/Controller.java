@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.event.*;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -7,11 +8,11 @@ import java.util.List;
 
 /**
  * @author Joachim Pihlgren, joapih-6
+ * The controller for the quiz game view and question handler view
  */
 public class Controller
 {
-
-	private final String[][] DEFAULT_VALUES = new String[][] { { " Special Agent Cooper",
+	private final String[][] DEFAULT_VALUES = new String[][] { { "Special Agent Cooper",
 			"Twin Peaks - Vad hette FBI-agenten som kom till Twin Peaks för att lösa mordet på Laura Palmer och äta paj?" },
 			{ "Danmark",
 					"Vilket nordiskt land ställde in betalningarna, dvs gick i konkurs, 1813 som en följd av Napoleonkriget?" },
@@ -20,7 +21,7 @@ public class Controller
 			{ "1983", "Vilket år lanserades Coca Cola Light i Sverige?" },
 			{ "Pablo Picasso", "Vem räknas, tillsammans med Georges Braque, som kubismens fader?" },
 			{ "Tallinn", "Vilken stad är Estlands huvudstad?" },
-			{ "Rom", " I vilken italiensk stad hör fotbollsklubben SS Lazio hemma?" },
+			{ "Rom", "I vilken italiensk stad hör fotbollsklubben SS Lazio hemma?" },
 			{ "1718", "Vilket år dog Karl XII?" },
 			{ "En slända", "Vilket föremål stack sig Törnrosa på?", "En slända" },
 			{ "Helsingborg", "Vilka stad har följande slogan: Här börjar Kontinenten?" } };
@@ -33,22 +34,25 @@ public class Controller
 
 	private Question question;
 
-	private View view;
+	private QuizView quizView;
+	private QuestionView questionView;
 	private Quiz model;
 
 	public Controller()
 	{
-		view = new View();
-		model = new Quiz();
-		model.addObserver(view);
 
+		quizView = new QuizView();
+		questionView = new QuestionView();
+		model = new Quiz();
 		setUpFileChooser();
 		if(!defaultFileLoaded())
 		{
 			loadDefaultValues();
 		}
+		model.addObserver(quizView);
+		model.addObserver(questionView);
 		addListeners();
-		resetView();
+		resetQuizView();
 	}
 
 	/**
@@ -69,75 +73,294 @@ public class Controller
 
 	private void addListeners()
 	{
-		view.writeToFileAddActionLister(e -> save());
-		view.readFromFileAddActionLister(e -> load());
-		view.exitAddActionLister(e -> exit());
-		view.addPlayerAddActionListener(e -> addPlayer());
-		view.removePlayerAddActionListener(e -> removePlayer());
-		view.doneAddActionListener(e -> validateQuestion());
-		view.startAddActionListener(e -> startNewGame());
-		view.abortAddActionListener(e -> abortGame());
+		quizView.writeToFileAddActionLister(e -> save());
+		quizView.readFromFileAddActionLister(e -> load());
+		quizView.exitAddActionLister(e -> exit());
+		quizView.editQuestionsAddActionListener(e -> handleQuestions());
+		quizView.addPlayerAddActionListener(e -> addPlayer());
+		quizView.removePlayerAddActionListener(e -> removePlayer());
+		quizView.doneAddActionListener(e -> validateGuess());
+		quizView.startAddActionListener(e -> startNewGame());
+		quizView.abortAddActionListener(e -> abortGame());
+
+		questionView.searchAddActionListener(e -> clearSearch());
+		questionView.searchAddFocusListener(new FocusListener()
+		{
+			@Override public void focusGained(FocusEvent e)
+			{
+				if(questionView.getSearchFieldText().isEmpty())
+				{
+					questionView.setSearchTextFieldText("");
+				}
+			}
+
+			@Override public void focusLost(FocusEvent e)
+			{
+				if(questionView.getSearchFieldText().isEmpty())
+				{
+					questionView.setSearchTextFieldText("");
+				}
+			}
+		});
+		questionView.tableAddMouseListener(new MouseListener()
+		{
+			@Override public void mouseClicked(MouseEvent e)
+			{
+
+			}
+
+			@Override public void mousePressed(MouseEvent e)
+			{
+
+			}
+
+			@Override public void mouseReleased(MouseEvent e)
+			{
+				if(questionView.getTableEnabled())
+				{
+					if(questionView.getSelectedRow() != -1)
+					{
+						questionView.changeButtonSetEnabled(true);
+						questionView.deleteButtonSetEnabled(true);
+						questionView.setQuestionTextAreaText(questionView.getSelectedQuestion());
+						questionView.setAnswerTextAreaText(questionView.getSelectedAnswer());
+					}
+				}
+				else
+				{
+					showConfirmMessage(questionView,
+							"Du kan inte välja en fråga när du\nlägger till eller ändrar en fråga. ",
+							new Object[] { "Ok" });
+				}
+			}
+
+			@Override public void mouseEntered(MouseEvent e)
+			{
+
+			}
+
+			@Override public void mouseExited(MouseEvent e)
+			{
+
+			}
+		});
+		questionView.searchAddKeyListener(new KeyListener()
+		{
+			@Override public void keyTyped(KeyEvent e)
+			{
+
+			}
+
+			@Override public void keyPressed(KeyEvent e)
+			{
+
+			}
+
+			@Override public void keyReleased(KeyEvent e)
+			{
+				questionView.newFilter();
+			}
+		});
+		questionView.newButtonAddActionListener(e -> addQuestion());
+		questionView.changeButtonAddActionListener(e -> editQuestion());
+		questionView.saveButtonAddActionListener(e -> saveQuestion());
+		questionView.deleteButtonAddActionListener(e -> deleteQuestion());
+
 	}
 
-	private void addPlayer()
+	//QuestionView Logic
+	private void handleQuestions()
 	{
-		String playerName = getUserInput("Ange ditt namn");
-		if(playerName == null)
+		questionView.setVisible(true);
+		questionView.update(model, null);
+	}
+
+	private void editQuestion()
+	{
+		questionView.setTableEnabled(false);
+		questionView.setSearchTextFieldEnabled(false);
+		questionView.saveButtonSetEnabled(false);
+		questionView.newButtonSetEnabled(false);
+		questionView.deleteButtonSetEnabled(false);
+		questionView.saveButtonSetEnabled(true);
+		questionView.setQuestionTextAreaEditable(true);
+		questionView.setAnswerTextAreaEditable(true);
+	}
+
+	private void addQuestion()
+	{
+		questionView.setAnswerTextAreaText("");
+		questionView.setQuestionTextAreaText("");
+		questionView.setTableEnabled(false);
+		questionView.setSearchTextFieldEnabled(false);
+		questionView.changeButtonSetEnabled(false);
+		questionView.deleteButtonSetEnabled(false);
+		questionView.saveButtonSetEnabled(true);
+		questionView.setQuestionTextAreaEditable(true);
+		questionView.setAnswerTextAreaEditable(true);
+	}
+
+	private void saveQuestion()
+	{
+
+		String newQuestion = questionView.getQuestionAreaText();
+		String newAnswer = questionView.getAnswerAreaText();
+
+		if(questionView.getChangeButtonEnabled())
 		{
-			//Do nothing since action was aborted
-		}
-		else if(playerName.equals(""))
-		{
-			showErrorMessage("Spelarnamn får inte vara tomt");
+			saveChangedQuestion(newQuestion, newAnswer);
 		}
 		else
 		{
-			view.addPlayer(new Player(playerName));
-			view.startSetEnabled(true);
-			view.removePlayerSetEnabled(true);
-			view.selectPlayer(0);
+			saveNewQuestion(newQuestion, newAnswer);
+		}
+
+		resetQuestionView();
+	}
+
+	private void saveChangedQuestion(String newQuestion, String newAnswer)
+	{
+		List<Question> questions = model.getQuestions();
+		for(Question question1 : questions)
+		{
+			if(questionView.getSelectedQuestion().toLowerCase().equals(question1.getQuestion().toLowerCase()))
+			{
+				if(newQuestionIsValid(newQuestion, newAnswer))
+				{
+					question1.setQuestion(newQuestion);
+					question1.setAnswer(newAnswer);
+					model.changeQuestion(question1);
+				}
+			}
+		}
+	}
+
+	private void saveNewQuestion(String newQuestion, String newAnswer)
+	{
+		boolean unique = true;
+		List<Question> questions = model.getQuestions();
+		for(Question question1 : questions)
+		{
+			if(newQuestion.toLowerCase().equals(question1.getQuestion().toLowerCase()))
+			{
+				unique = false;
+			}
+		}
+		if(unique)
+		{
+			if(newQuestionIsValid(newQuestion, newAnswer))
+			{
+				model.addQuestion(newQuestion, newAnswer);
+			}
+			else
+			{
+				showErrorMessage(questionView, "Fälten får inte vara tomma");
+			}
+		}
+		else
+		{
+			showErrorMessage(questionView, "Frågan finns redan");
+		}
+	}
+
+	private void deleteQuestion()
+	{
+		List<Question> questions = model.getQuestions();
+		for(Question question1 : questions)
+		{
+			if(questionView.getSelectedQuestion().toLowerCase().equals(question1.getQuestion().toLowerCase()))
+			{
+				model.removeQuestion(question1);
+			}
+		}
+		resetQuestionView();
+	}
+
+	private boolean newQuestionIsValid(String question, String answer)
+	{
+		return !question.isEmpty() && !answer.isEmpty();
+	}
+
+	private void resetQuestionView()
+	{
+		questionView.setAnswerTextAreaText("");
+		questionView.setQuestionTextAreaText("");
+		questionView.deslectRow();
+		questionView.setQuestionTextAreaEditable(false);
+		questionView.setAnswerTextAreaEditable(false);
+		questionView.changeButtonSetEnabled(false);
+		questionView.saveButtonSetEnabled(false);
+		questionView.newButtonSetEnabled(true);
+		questionView.setTableEnabled(true);
+		questionView.setSearchTextFieldEnabled(true);
+	}
+
+	private void clearSearch()
+	{
+		questionView.setSearchTextFieldText("");
+		questionView.newFilter();
+	}
+
+	//Game Logic
+	private void addPlayer()
+	{
+		String playerName = getUserInput(quizView);
+		if(playerName != null)
+		{
+			if(playerName.equals(""))
+			{
+				showErrorMessage(quizView, "Spelarnamn får inte vara tomt");
+			}
+			else
+			{
+				quizView.addPlayer(new Player(playerName));
+				quizView.startSetEnabled(true);
+				quizView.removePlayerSetEnabled(true);
+				quizView.selectPlayer(0);
+			}
 		}
 	}
 
 	private void removePlayer()
 	{
-		view.removeSelectedPlayer();
-		if(view.getListModelSize() < 1)
+		quizView.removeSelectedPlayer();
+		if(quizView.getListModelSize() < 1)
 		{
-			view.removePlayerSetEnabled(false);
+			quizView.removePlayerSetEnabled(false);
 		}
 	}
 
-	private void validateQuestion()
+	private void validateGuess()
+
 	{
-		if(question.getAnswer().toLowerCase().equals(view.getAnswerTextFieldText().toLowerCase()))
+		if(question.getAnswer().toLowerCase().equals(quizView.getAnswerTextFieldText().toLowerCase()))
 		{
-			view.increaseSelectedPlayerScoreByOne();
-			showSuccessMessage("Rätt", "Rätt");
-			view.clearAnswerTextField();
+			quizView.increaseSelectedPlayerScoreByOne();
+			showSuccessMessage(quizView, "Rätt", "Rätt");
+			quizView.clearAnswerTextField();
 			displayNextQuestion();
 		}
 		else
 		{
-			showErrorMessage("Fel");
-			if(!view.setNextPlayerSelected())
+			showErrorMessage(quizView, "Fel");
+			if(!quizView.setNextPlayerSelected())
 			{
 				displayEndGameScore();
-				resetView();
+				resetQuizView();
 			}
 			else
 			{
-				showConfirmMessage("Det är spelare " + view.getSelectedPlayerName() + "s tur", new Object[] { "ok" });
-				view.clearAnswerTextField();
+				showConfirmMessage(quizView, "Det är spelare " + quizView.getSelectedPlayerName() + "s tur",
+						new Object[] { "ok" });
+				quizView.clearAnswerTextField();
 				displayNextQuestion();
 			}
-
 		}
 	}
 
 	private void displayEndGameScore()
 	{
-		List<Player> players = view.getPlayers();
+		List<Player> players = quizView.getPlayers();
 		StringBuilder playerScores = new StringBuilder();
 		Player winner = players.get(0);
 		for(Player player : players)
@@ -154,20 +377,23 @@ public class Controller
 		playerScores.append(winner.getName());
 		playerScores.append(" vann!");
 
-		showSuccessMessage(playerScores.toString(), "Quizet slut!");
+		showSuccessMessage(quizView, playerScores.toString(), "Quizet slut!");
 	}
 
 	private void startNewGame()
 	{
 		model.createNewRandom();
-		view.playersSetSelectionAllowed(false);
-		view.removePlayerSetEnabled(false);
-		view.addPlayerSetEnabled(false);
-		view.startSetEnabled(false);
-		view.abortSetEnabled(true);
-		view.doneSetEnabled(true);
-		view.selectPlayer(0);
-		showConfirmMessage("Det är spelare " + view.getSelectedPlayerName() + "s tur", new Object[] { "ok" });
+		final boolean DEBUG_MODE = false; ///If true, allow user to view the question handler while playing.
+		quizView.setEditQuestionsEnabled(DEBUG_MODE);
+		quizView.playersSetSelectionAllowed(false);
+		quizView.removePlayerSetEnabled(false);
+		quizView.addPlayerSetEnabled(false);
+		quizView.startSetEnabled(false);
+		quizView.abortSetEnabled(true);
+		quizView.doneSetEnabled(true);
+		quizView.selectPlayer(0);
+		showConfirmMessage(quizView, "Det är spelare " + quizView.getSelectedPlayerName() + "s tur",
+				new Object[] { "ok" });
 		displayNextQuestion();
 
 	}
@@ -175,41 +401,44 @@ public class Controller
 	private void displayNextQuestion()
 	{
 		question = model.getRandomQuestion();
-		view.setQuestionTextAreaText(question.getQuestion());
+		quizView.setQuestionTextAreaText(question.getQuestion());
 	}
 
 	private void abortGame()
 	{
-		int choice = showConfirmMessage("Vill du verkligen avbrtya spelet?", new Object[] { "Ja", "nej" });
+		int choice = showConfirmMessage(quizView, "Vill du verkligen avbrtya spelet?", new Object[] { "Ja", "nej" });
 		if(choice == JOptionPane.YES_OPTION)
 		{
-			resetView();
+			resetQuizView();
 		}
 	}
 
-	private void resetView()
+	private void resetQuizView()
 	{
-		view.setQuestionTextAreaText("");
-		view.clearAnswerTextField();
-		view.removeAllPlayers();
-		view.playersSetSelectionAllowed(true);
-		view.addPlayerSetEnabled(true);
-		view.removePlayerSetEnabled(true);
-		view.startSetEnabled(false);
-		view.abortSetEnabled(false);
-		view.doneSetEnabled(false);
-		view.removePlayerSetEnabled(false);
+		quizView.setQuestionTextAreaText("");
+		quizView.clearAnswerTextField();
+		quizView.removeAllPlayers();
+		quizView.playersSetSelectionAllowed(true);
+		quizView.addPlayerSetEnabled(true);
+		quizView.removePlayerSetEnabled(true);
+		quizView.setEditQuestionsEnabled(true);
+		quizView.startSetEnabled(false);
+		quizView.abortSetEnabled(false);
+		quizView.doneSetEnabled(false);
+		quizView.removePlayerSetEnabled(false);
 	}
 
 	private void exit()
 	{
-		if(showConfirmMessage("Vill du spara innan du avslutar?", new Object[] { "Ja", "Avbryt" })
+		if(showConfirmMessage(quizView, "Vill du spara innan du avslutar?", new Object[] { "Ja", "Avbryt" })
 				== JOptionPane.YES_OPTION)
 		{
 			save();
 		}
 		System.exit(0);
 	}
+
+	// IO operations
 
 	/**
 	 * Load the default file
@@ -224,23 +453,25 @@ public class Controller
 		{
 			Question.setQuestionCount(objectInputStream.readInt());
 			this.model = (Quiz) objectInputStream.readObject();
-			//todo update view
+			quizView.update(model, null);
 			return true;
 		}
 		catch(StreamCorruptedException sce)
 		{
-			showErrorMessage("Filen var korrupt och kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
+			showErrorMessage(quizView,
+					"Filen var korrupt och kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
 			printToErrorFile(sce);
 		}
 		catch(IOException ioe)
 		{
-			showErrorMessage("Filen kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
+			showErrorMessage(quizView, "Filen kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
 			printToErrorFile(ioe);
 		}
 		catch(ClassNotFoundException cnfe)
 		{
-			showErrorMessage("Det inlästa objektet stämmer inte\nmed det förväntade objektet\n Se " + ERROR_FILE
-					+ " för mer information");
+			showErrorMessage(quizView,
+					"Det inlästa objektet stämmer inte\nmed det förväntade objektet\n Se " + ERROR_FILE
+							+ " för mer information");
 			printToErrorFile(cnfe);
 		}
 		return false;
@@ -255,7 +486,7 @@ public class Controller
 		FILE_CHOOSER.setFileFilter(
 				new FileNameExtensionFilter(DEFAULT_FILE_EXTENSION, DEFAULT_FILE_EXTENSION.replaceAll("\\.", "")));
 
-		int userChoice = FILE_CHOOSER.showOpenDialog(view);
+		int userChoice = FILE_CHOOSER.showOpenDialog(quizView);
 		if(userChoice == JFileChooser.APPROVE_OPTION)
 		{
 			try(FileInputStream fileInputStream = new FileInputStream(FILE_CHOOSER.getSelectedFile());
@@ -263,22 +494,26 @@ public class Controller
 			{
 				Question.setQuestionCount(objectInputStream.readInt());
 				this.model = (Quiz) objectInputStream.readObject();
-				//todo Update view
+				model.addObserver(quizView);
+				model.addObserver(questionView);
+				quizView.update(model, null);
 			}
 			catch(StreamCorruptedException sce)
 			{
-				showErrorMessage("Filen var korrupt och kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
+				showErrorMessage(quizView,
+						"Filen var korrupt och kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
 				printToErrorFile(sce);
 			}
 			catch(IOException ioe)
 			{
-				showErrorMessage("Filen kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
+				showErrorMessage(quizView, "Filen kunde inte öppnas\n Se " + ERROR_FILE + " för mer information");
 				printToErrorFile(ioe);
 			}
 			catch(ClassNotFoundException cnfe)
 			{
-				showErrorMessage("Det inlästa objektet stämmer inte\nmed det förväntade objektet\n Se " + ERROR_FILE
-						+ " för mer information");
+				showErrorMessage(quizView,
+						"Det inlästa objektet stämmer inte\nmed det förväntade objektet\n Se " + ERROR_FILE
+								+ " för mer information");
 				printToErrorFile(cnfe);
 			}
 		}
@@ -293,7 +528,7 @@ public class Controller
 		FILE_CHOOSER.setFileFilter(
 				new FileNameExtensionFilter(DEFAULT_FILE_EXTENSION, DEFAULT_FILE_EXTENSION.replaceAll("\\.", "")));
 
-		int userChoice = FILE_CHOOSER.showSaveDialog(view);
+		int userChoice = FILE_CHOOSER.showSaveDialog(quizView);
 		if(userChoice == JFileChooser.APPROVE_OPTION)
 		{
 			if(overWriteExistingFile(FILE_CHOOSER.getSelectedFile()))
@@ -310,7 +545,8 @@ public class Controller
 				}
 				catch(IOException ioe)
 				{
-					showErrorMessage("Filen kunde inte skrivas till\n Se " + ERROR_FILE + " för mer information");
+					showErrorMessage(quizView,
+							"Filen kunde inte skrivas till\n Se " + ERROR_FILE + " för mer information");
 					printToErrorFile(ioe);
 				}
 			}
@@ -326,7 +562,7 @@ public class Controller
 	{
 		if(fileToOverWrite.exists())
 		{
-			int userChoice = showConfirmMessage(
+			int userChoice = showConfirmMessage(quizView,
 					"Filen du vill skriva till finns redan.\n Vill du skriva " + "överbefintlig data?",
 					new Object[] { "Ja", "Nej" });
 
@@ -380,7 +616,7 @@ public class Controller
 			{
 				stackTrace.append(stackTraceElement.toString()).append(System.lineSeparator());
 			}
-			showErrorMessage(stackTrace.toString());
+			showErrorMessage(quizView, stackTrace.toString());
 		}
 	}
 
@@ -389,7 +625,7 @@ public class Controller
 	 *
 	 * @param message the message to display as a String
 	 */
-	private void showErrorMessage(String message)
+	private void showErrorMessage(JFrame view, String message)
 	{
 		JOptionPane.showMessageDialog(view, message, "Fel", JOptionPane.ERROR_MESSAGE);
 	}
@@ -400,21 +636,20 @@ public class Controller
 	 * @param message the message to display as a String
 	 * @return the confirmation or lack there of as an int
 	 */
-	private int showConfirmMessage(String message, Object[] options)
+	private int showConfirmMessage(JFrame view, String message, Object[] options)
 	{
 		return JOptionPane.showOptionDialog(view, message, "Bekräfta", JOptionPane.YES_NO_CANCEL_OPTION,
 				JOptionPane.QUESTION_MESSAGE, null, options, options[options.length - 1]);
 	}
 
 	/**
-	 * @param userMessage the message to print
 	 * @return the user input
 	 */
-	private String getUserInput(String userMessage)
+	private String getUserInput(JFrame view)
 	{
 		JTextField userInput = new JTextField();
 
-		Object[] message = { userMessage, userInput };
+		Object[] message = { "Ange ditt namn", userInput };
 		Object[] options = { "Ok", "Avbryt" };
 
 		int choice = JOptionPane
@@ -434,7 +669,7 @@ public class Controller
 	 * @param message the message to display as a String
 	 * @param title   the title of the JOptionPane
 	 */
-	private void showSuccessMessage(String message, String title)
+	private void showSuccessMessage(JFrame view, String message, String title)
 	{
 		JOptionPane.showMessageDialog(view, message, title, JOptionPane.INFORMATION_MESSAGE);
 	}

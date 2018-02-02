@@ -8,14 +8,17 @@ import java.util.Observer;
 
 /**
  * @author Joachim Pihlgren, joapih-6
+ * A view for the quiz game
  */
-public class View extends JFrame implements Observer
+@SuppressWarnings("ALL") public class QuizView extends JFrame implements Observer
 {
 	private JMenuBar menuBar;
 	private JMenu file;
 	private JMenuItem writeToFile;
 	private JMenuItem readFromFile;
 	private JMenuItem exit;
+	private JMenu edit;
+	private JMenuItem editQuestions;
 
 	private JPanel mainPanel;
 
@@ -30,7 +33,7 @@ public class View extends JFrame implements Observer
 	private JButton start;
 	private JButton abort;
 
-	public View()
+	public QuizView()
 	{
 		createMenuBar();
 		createMainPanel();
@@ -52,8 +55,13 @@ public class View extends JFrame implements Observer
 		file.add(readFromFile);
 		file.add(exit);
 
+		editQuestions = new JMenuItem("Frågor");
+		edit = new JMenu("Ändra");
+		edit.add(editQuestions);
+
 		menuBar = new JMenuBar();
 		menuBar.add(file);
+		menuBar.add(edit);
 
 		this.setJMenuBar(menuBar);
 	}
@@ -71,6 +79,16 @@ public class View extends JFrame implements Observer
 	public void exitAddActionLister(ActionListener actionListener)
 	{
 		exit.addActionListener(actionListener);
+	}
+
+	public void editQuestionsAddActionListener(ActionListener actionListener)
+	{
+		editQuestions.addActionListener(actionListener);
+	}
+
+	public void setEditQuestionsEnabled(boolean bool)
+	{
+		editQuestions.setEnabled(bool);
 	}
 
 	private void createMainPanel()
