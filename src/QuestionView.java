@@ -13,8 +13,9 @@ import java.util.Observer;
 
 /**
  * @AUTHOR Joachim Pihlgren, joapih-6
+ * A view for displaying all the questions in the model.
  */
-public class QuestionView extends JFrame implements Observer
+@SuppressWarnings("ALL") public class QuestionView extends JFrame implements Observer
 {
 
 	private final Object[] COLUMN_NAMES = new Object[] { "Fråga", "Svar" };
@@ -28,7 +29,7 @@ public class QuestionView extends JFrame implements Observer
 	private JScrollPane jScrollPane;
 
 	private JTextArea questionTextArea;
-	private JTextField answerTextField;
+	private JTextArea answerTextArea;
 	private JButton saveButton;
 	private JPanel savePanel;
 
@@ -75,8 +76,15 @@ public class QuestionView extends JFrame implements Observer
 
 	private void createTablePanel()
 	{
-		tableModel = new DefaultTableModel();
+		tableModel = new DefaultTableModel()
+		{
+			@Override public boolean isCellEditable(int row, int column)
+			{
+				return false;
+			}
+		};
 		tableModel.setColumnIdentifiers(COLUMN_NAMES);
+
 		sorter = new TableRowSorter<>(tableModel);
 		table = new JTable(tableModel);
 		table.setRowSorter(sorter);
@@ -107,16 +115,23 @@ public class QuestionView extends JFrame implements Observer
 		questionTextArea.setBorder(BorderFactory.createTitledBorder("Fråga"));
 		questionTextArea.setWrapStyleWord(true);
 		questionTextArea.setLineWrap(true);
-		answerTextField = new JTextField("");
-		answerTextField.setBorder(BorderFactory.createTitledBorder("Svar"));
+		questionTextArea.setEditable(false);
+		answerTextArea = new JTextArea("");
+		answerTextArea.setBorder(BorderFactory.createTitledBorder("Svar"));
+		answerTextArea.setWrapStyleWord(true);
+		answerTextArea.setLineWrap(true);
+		answerTextArea.setEditable(false);
 		saveButton = new JButton("Spara");
+		saveButton.setEnabled(false);
 		savePanel = new JPanel();
 		savePanel.setLayout(new BoxLayout(savePanel, BoxLayout.LINE_AXIS));
 		savePanel.add(saveButton);
 		savePanel.setAlignmentX(JComponent.LEFT_ALIGNMENT);
 		newButton = new JButton("Ny");
 		changeButton = new JButton("Ändra");
-		deleteButton = new JButton("Delete");
+		changeButton.setEnabled(false);
+		deleteButton = new JButton("Ta bort");
+		deleteButton.setEnabled(false);
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 		buttonPanel.add(newButton);
@@ -125,7 +140,7 @@ public class QuestionView extends JFrame implements Observer
 		detailsPanel = new JPanel();
 		detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.PAGE_AXIS));
 		detailsPanel.add(questionTextArea);
-		detailsPanel.add(answerTextField);
+		detailsPanel.add(answerTextArea);
 		detailsPanel.add(savePanel);
 		detailsPanel.add(Box.createRigidArea(new Dimension(0, 25)));
 		detailsPanel.add(buttonPanel);
@@ -146,7 +161,7 @@ public class QuestionView extends JFrame implements Observer
 		searchTextField.setEnabled(bool);
 	}
 
-	public void searchAddFocuslistener(FocusListener focusListener)
+	public void searchAddFocusListener(FocusListener focusListener)
 	{
 		searchTextField.addFocusListener(focusListener);
 	}
@@ -161,44 +176,75 @@ public class QuestionView extends JFrame implements Observer
 		table.addMouseListener(mouseListener);
 	}
 
-	public String getQuestionFieldText()
+	public boolean getTableEnabled()
+	{
+		return table.isEnabled();
+	}
+
+	public void setTableEnabled(boolean bool)
+	{
+		table.setEnabled(bool);
+	}
+
+	public void deslectRow()
+	{
+		table.clearSelection();
+	}
+
+	public String getSelectedQuestion()
+	{
+		int selectedRow = table.getSelectedRow();
+		if(selectedRow != -1)
+		{
+			return (String) tableModel.getValueAt(table.convertRowIndexToModel(table.getSelectedRow()), 0);
+		}
+		return "";
+
+	}
+
+	public String getSelectedAnswer()
+	{
+		return (String) tableModel.getValueAt(table.convertRowIndexToModel(table.getSelectedRow()), 1);
+	}
+
+	public int getSelectedRow()
+	{
+		return table.getSelectedRow();
+	}
+
+	public String getQuestionAreaText()
 	{
 		return questionTextArea.getText();
 	}
 
-	public void setQuestionTextArea(String text)
+	public void setQuestionTextAreaText(String text)
 	{
 		questionTextArea.setText(text);
 	}
 
-	public void setQuestionTextFieldEditable(boolean bool)
+	public void setQuestionTextAreaEditable(boolean bool)
 	{
 		questionTextArea.setEditable(bool);
 	}
 
-	public String getAswerFieldText()
+	public String getAnswerAreaText()
 	{
-		return answerTextField.getText();
+		return answerTextArea.getText();
 	}
 
-	public void setAnswerTextFieldText(String text)
+	public void setAnswerTextAreaText(String text)
 	{
-		answerTextField.setText(text);
+		answerTextArea.setText(text);
 	}
 
-	public void setAnswerTextFieldEditable(boolean bool)
+	public void setAnswerTextAreaEditable(boolean bool)
 	{
-		answerTextField.setEditable(bool);
+		answerTextArea.setEditable(bool);
 	}
 
 	public void searchAddActionListener(ActionListener actionListener)
 	{
 		clearButton.addActionListener(actionListener);
-	}
-
-	public void searchButtonSetEnabled(boolean bool)
-	{
-		clearButton.setEnabled(bool);
 	}
 
 	public void saveButtonAddActionListener(ActionListener actionListener)
@@ -231,12 +277,15 @@ public class QuestionView extends JFrame implements Observer
 		changeButton.setEnabled(bool);
 	}
 
+	public boolean getChangeButtonEnabled()
+	{
+		return changeButton.isEnabled();
+	}
+
 	public void deleteButtonAddActionListener(ActionListener actionListener)
 	{
 		deleteButton.addActionListener(actionListener);
 	}
-
-	//table.getSelectionModel().setSelectionInterval(table.getSelectedRow() - 1, table.getSelectedRow());
 
 	public void deleteButtonSetEnabled(boolean bool)
 	{

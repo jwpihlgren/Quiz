@@ -8,8 +8,9 @@ import java.util.Observer;
 
 /**
  * @author Joachim Pihlgren, joapih-6
+ * A view for the quiz game
  */
-public class QuizView extends JFrame implements Observer
+@SuppressWarnings("ALL") public class QuizView extends JFrame implements Observer
 {
 	private JMenuBar menuBar;
 	private JMenu file;
@@ -58,7 +59,6 @@ public class QuizView extends JFrame implements Observer
 		edit = new JMenu("Ändra");
 		edit.add(editQuestions);
 
-
 		menuBar = new JMenuBar();
 		menuBar.add(file);
 		menuBar.add(edit);
@@ -84,6 +84,11 @@ public class QuizView extends JFrame implements Observer
 	public void editQuestionsAddActionListener(ActionListener actionListener)
 	{
 		editQuestions.addActionListener(actionListener);
+	}
+
+	public void setEditQuestionsEnabled(boolean bool)
+	{
+		editQuestions.setEnabled(bool);
 	}
 
 	private void createMainPanel()

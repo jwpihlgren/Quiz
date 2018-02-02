@@ -1,12 +1,13 @@
 /**
  * @author Joachim Pihlgren, joapih-6
+ * A player model for keeping track of names and scores.
  */
 public class Player
 {
 	private String name;
 	private int score;
 
-	public Player(String name)
+	Player(String name)
 	{
 		this.name = name;
 		score = 0;

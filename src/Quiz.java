@@ -6,8 +6,10 @@ import java.util.Random;
 
 /**
  * @author Joachim Pihlgren, joapih-6
+ * A quiz model, it holds questions and allows manipulation of questions and generates a random question from the list
+ * of questions.
  */
-public class Quiz extends Observable implements Serializable
+@SuppressWarnings("ALL") public class Quiz extends Observable implements Serializable
 {
 	private List<Question> questions;
 	private Random random;
@@ -27,13 +29,15 @@ public class Quiz extends Observable implements Serializable
 
 	public void removeQuestion(Question copyOfQuestion)
 	{
+		Question toRemove = null;
 		for(Question question : questions)
 		{
 			if(question.getId() == copyOfQuestion.getId())
 			{
-				questions.remove(question);
+				toRemove = question;
 			}
 		}
+		questions.remove(toRemove);
 		setChanged();
 		notifyObservers();
 	}
@@ -44,6 +48,7 @@ public class Quiz extends Observable implements Serializable
 		{
 			if(question.getId() == copyOfQuestion.getId())
 			{
+				question.setQuestion(copyOfQuestion.getQuestion());
 				question.setAnswer(copyOfQuestion.getAnswer());
 			}
 		}
@@ -65,7 +70,7 @@ public class Quiz extends Observable implements Serializable
 
 	public Question getRandomQuestion()
 	{
-		Question question = questions.get(random.nextInt(questions.size() - 1) + 1);
+		Question question = questions.get(random.nextInt(questions.size() - 1));
 		return new Question(question.getQuestion(), question.getAnswer());
 	}
 

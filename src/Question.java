@@ -2,6 +2,7 @@ import java.io.Serializable;
 
 /**
  * @author Joachim Pihlgren, joapih-6
+ * A question model for holding question and answers for each "question"
  */
 public class Question implements Serializable
 {
@@ -10,7 +11,7 @@ public class Question implements Serializable
 	private String answer;
 	private int id;
 
-	public Question(String question, String answer)
+	Question(String question, String answer)
 	{
 		setQuestion(question);
 		setAnswer(answer);
